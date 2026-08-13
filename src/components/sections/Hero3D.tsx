@@ -4,11 +4,10 @@ import { Suspense } from "react";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import Button from "@/components/ui/Button";
+import StoreBadges from "@/components/ui/StoreBadges";
 import {
-  APP_STORE_URL,
   CALENDLY_URL,
   HERO_STATS,
-  PLAY_STORE_URL,
   trialSignupUrl,
 } from "@/lib/constants";
 
@@ -142,22 +141,7 @@ export default function Hero3D() {
                   size and link treatment so the row reads as a matched pair
                   rather than two differently-sized store badges. */}
               <div className="flex flex-wrap items-center gap-x-5 gap-y-2 md:justify-end">
-                <a
-                  href={APP_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-forge-smoke hover:text-forge-white text-sm transition-colors underline underline-offset-4 decoration-forge-graphite"
-                >
-                  Download on the App Store
-                </a>
-                <a
-                  href={PLAY_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-forge-smoke hover:text-forge-white text-sm transition-colors underline underline-offset-4 decoration-forge-graphite"
-                >
-                  Get it on Google Play
-                </a>
+                <StoreBadges align="start" />
               </div>
             </motion.div>
           </div>
