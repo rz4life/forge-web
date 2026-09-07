@@ -74,7 +74,10 @@ export const ANDROID_WAITLIST_ENABLED =
 
 export type FaqItem = { question: string; answer: string };
 
-// Pricing-page FAQ - PRD 9.10, word-for-word (7 Q&As).
+// Pricing-page FAQ - PRD 9.10, word-for-word (7 Q&As), with one exception
+// noted inline: the "What counts as a seat?" answer gained a sentence
+// scoping sub access under F-076 (RZ 2026-09-07), because the PRD wording
+// contradicted the Master Subscription Agreement's definition of a Sub Seat.
 export const PRICING_FAQ: FaqItem[] = [
   {
     question: "Do I need to talk to sales to get started?",
@@ -87,9 +90,22 @@ export const PRICING_FAQ: FaqItem[] = [
       "No. Use Forge free for 14 days without entering payment info. We'll remind you before the trial ends. Add a payment method any time to keep your seats active. If you don't, your account pauses. Nothing gets deleted.",
   },
   {
+    // F-076 (RZ 2026-09-07). The second sentence is the only edit to the
+    // PRD 9.10 wording, and it is here because this answer is the other
+    // place on the pricing surface that lists the roles. It read as five
+    // interchangeable seats; the Master Subscription Agreement (1.6)
+    // defines a Sub Seat by what it cannot see. Stated as the benefit it
+    // is to a general contractor rather than as a limitation, per the
+    // ruling.
+    //
+    // The two PRICE sentences are deliberately untouched, to the byte.
+    // Whether a sub seat is $39 and consumes one of the included three,
+    // or the $9.99 add-on that never does, is F-075 and is not this
+    // ticket's to answer. Editing them here would decide that ruling by
+    // accident.
     question: "What counts as a seat?",
     answer:
-      "Anyone who logs into Forge: owner, admin, PM, estimator, or sub. Your first 3 are included in the base price. Each additional teammate is $39/month, or $374/year on the annual plan.",
+      "Anyone who logs into Forge: owner, admin, PM, estimator, or sub. Subs get their own kind of seat, scoped to the tasks you assign them and their own pricing, with no view of the job's full scope, your estimates, or anyone else's numbers. Your first 3 are included in the base price. Each additional teammate is $39/month, or $374/year on the annual plan.",
   },
   {
     question: "Is there a contract?",

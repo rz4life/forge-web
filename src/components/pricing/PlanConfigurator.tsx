@@ -36,12 +36,32 @@ import {
  * a few cents closer. `annualHeadlineMonthly` in lib/pricing.ts carries the
  * full reasoning and the table. */
 
+/* The roles bullets, and why there are two of them (F-076, RZ 2026-09-07).
+ *
+ * This list used to sell "Full team roles: Owner, Admin, PM, Estimator,
+ * Sub" in one line. The Master Subscription Agreement (section 1.6, in
+ * src/content/msa/v1.0.md) defines a Sub Seat as the opposite of a full
+ * team role: "access limited to the tasks assigned to it and its own
+ * submitted pricing, without visibility into the job's full scope,
+ * estimates, or other users' pricing." A sub is defined by what it cannot
+ * see. Selling it as an equal seat promised access the product refuses,
+ * and the agreement is the half that is right.
+ *
+ * The fix is NOT to quietly drop "Sub" from the list. Scoped subcontractor
+ * access is a selling point to a general contractor, who does not want the
+ * framer reading the homeowner's budget conversation or another trade's
+ * bid. A silent deletion would also read as a feature removal to anyone
+ * diffing the old copy against the new. So the restriction moves to its
+ * own bullet and is stated as the benefit it is.
+ *
+ * Staff roles are named by the four that genuinely see the whole job. */
 const PLAN_FEATURES = [
   "Unlimited job walks and recordings",
   "AI-generated scope + estimate from every walk",
   "iOS, Web, and Android access",
   "Export to Buildertrend, PDF, and CSV",
-  "Full team roles: Owner, Admin, PM, Estimator, Sub",
+  "Team roles: Owner, Admin, PM, and Estimator",
+  "Bring subs in with access scoped to their own tasks and pricing",
   "Email support",
 ];
 
