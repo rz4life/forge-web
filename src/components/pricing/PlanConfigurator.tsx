@@ -6,7 +6,8 @@ import Button from "@/components/ui/Button";
 import { CALENDLY_URL, CASE_STUDY_PATH, trialSignupUrl } from "@/lib/constants";
 import { HARRIS_SUMMARY_ROI } from "@/lib/caseStudy";
 import {
-  MIN_SEATS,
+  MIN_STAFF_SEATS,
+  DEFAULT_STAFF_SEATS,
   INCLUDED_SEATS,
   SEAT_MONTHLY,
   SEAT_ANNUAL,
@@ -16,55 +17,26 @@ import {
   monthlyTotal,
   annualTotal,
   annualAsMonthly,
+  annualSubAsMonthly,
   annualHeadlineMonthly,
   formatUsd,
   formatSeatUsd,
   type BillingPlan,
 } from "@/lib/pricing";
 
-/* Plan card + monthly/annual toggle + seat stepper - PRD 9.10 / Section 8.
- * Price math is client-side display only (249 + 39×(seats−3) monthly;
- * 2390 + 374×(seats−3) annual). The CTA carries plan+seats to the dashboard
- * signup; live Stripe Checkout (PRD Section 13) is a later backend project.
- *
- * The headline is always a monthly figure, on both plans (Ethan Rife,
- * 2026-08-13, matching how Apollo and CompanyCam quote annual plans). Seats
- * follow the same rule, and the annual total that actually gets charged is
- * printed in the small line underneath. The prices themselves did not change.
- *
- * The annual headline is the sum of the two per-part monthly figures the card
- * prints, not the annual total divided by twelve. Those two readings diverge
- * once a seat is added (at five seats: $261 vs $262, reaching $2 apart at
- * twelve), and the version a customer can add up wins over the version that is
- * a few cents closer. `annualHeadlineMonthly` in lib/pricing.ts carries the
- * full reasoning and the table. */
-
-/* The roles bullets, and why there are two of them (F-076, RZ 2026-09-07).
- *
- * This list used to sell "Full team roles: Owner, Admin, PM, Estimator,
- * Sub" in one line. The Master Subscription Agreement (section 1.6, in
- * src/content/msa/v1.0.md) defines a Sub Seat as the opposite of a full
- * team role: "access limited to the tasks assigned to it and its own
- * submitted pricing, without visibility into the job's full scope,
- * estimates, or other users' pricing." A sub is defined by what it cannot
- * see. Selling it as an equal seat promised access the product refuses,
- * and the agreement is the half that is right.
- *
- * The fix is NOT to quietly drop "Sub" from the list. Scoped subcontractor
- * access is a selling point to a general contractor, who does not want the
- * framer reading the homeowner's budget conversation or another trade's
- * bid. A silent deletion would also read as a feature removal to anyone
- * diffing the old copy against the new. So the restriction moves to its
- * own bullet and is stated as the benefit it is.
- *
- * Staff roles are named by the four that genuinely see the whole job. */
+/* F-075 ruling, 2026-09-07: quote staff and Sub seats separately.
+ * The annual headline sums the displayed rounded monthly equivalents;
+ * the exact annual charge is always shown underneath. Signup does not
+ * consume these counts; actual billing uses the backend roster.
+ * F-076 ruling, 2026-09-07: describe assigned-task access as the Sub benefit.
+ * The product has no Sub bid-submission feature, so do not promise one. */
 const PLAN_FEATURES = [
   "Unlimited job walks and recordings",
   "AI-generated scope + estimate from every walk",
   "iOS, Web, and Android access",
   "Export to Buildertrend, PDF, and CSV",
   "Team roles: Owner, Admin, PM, and Estimator",
-  "Bring subs in with access scoped to their own tasks and pricing",
+  "Bring subs in with access scoped to their assigned tasks",
   "Email support",
 ];
 
@@ -78,25 +50,27 @@ export default function PlanConfigurator() {
   // in-app trial-to-paid upgrade flow in Forge_Web keeps monthly as its
   // default and is deliberately untouched.
   const [plan, setPlan] = useState<BillingPlan>("annual");
-  const [seats, setSeats] = useState(MIN_SEATS);
+  const [seats, setSeats] = useState(DEFAULT_STAFF_SEATS);
+  const [subSeats, setSubSeats] = useState(0);
 
-  const extraSeats = seats - INCLUDED_SEATS;
-  const annual = annualTotal(seats);
+  const extraSeats = Math.max(0, seats - INCLUDED_SEATS);
+  const annual = annualTotal(seats, subSeats);
 
   // Every price on this card is quoted per month. On the annual plan that
   // means the annual figure ÷ 12; `annual` itself is still shown, as the
   // amount charged once a year.
   const baseAnnualAsMonthly = annualAsMonthly(BASE_ANNUAL);
   const seatAnnualAsMonthly = annualAsMonthly(SEAT_ANNUAL);
-  // The annual headline is built from the same two per-part figures printed
+  // The annual headline is built from the same per-part figures printed
   // below it, so the card adds up for a reader who checks. Using
   // `annualAsMonthly(annual)` here is arithmetically closer to the real charge
   // but prints $262 above parts that sum to $261 at five seats, widening to $2
   // by twelve. See `annualHeadlineMonthly` for the full reasoning; the exact
   // annual amount is printed verbatim underneath either way.
   const headlineMonthly =
-    plan === "monthly" ? monthlyTotal(seats) : annualHeadlineMonthly(seats);
+    plan === "monthly" ? monthlyTotal(seats, subSeats) : annualHeadlineMonthly(seats, subSeats);
   const seatMonthly = plan === "monthly" ? SEAT_MONTHLY : seatAnnualAsMonthly;
+  const subMonthly = plan === "monthly" ? SUB_SEAT_MONTHLY : annualSubAsMonthly();
 
   return (
     <div className="max-w-lg mx-auto">
@@ -151,15 +125,15 @@ export default function PlanConfigurator() {
           <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-forge-graphite/50" />
         </div>
 
-        <div className="bg-forge-graphite/50 backdrop-blur-sm border border-forge-cyan/30 shadow-[0_0_80px_rgba(14,165,233,0.05)] rounded-none p-8 md:p-10 flex flex-col gap-6">
+        <div className="bg-forge-graphite/50 backdrop-blur-sm border border-forge-cyan/30 shadow-[0_0_80px_rgba(14,165,233,0.05)] rounded-none p-5 sm:p-8 md:p-10 flex flex-col gap-6">
           <span className="bg-forge-white/5 text-forge-ash self-start px-4 py-1.5 text-sm font-bold uppercase tracking-[0.15em] font-[family-name:var(--font-mono)]">
             FORGE
           </span>
 
           {/* Price - always a monthly figure, on both plans */}
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-medium text-forge-white tabular-nums tracking-tight">
+          <div aria-live="polite" aria-atomic="true" aria-label="Plan price">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-4xl sm:text-5xl font-medium text-forge-white tabular-nums tracking-tight">
                 {formatUsd(headlineMonthly)}
               </span>
               <span className="text-forge-smoke text-lg">/month</span>
@@ -167,75 +141,103 @@ export default function PlanConfigurator() {
 
             {plan === "annual" && (
               <p className="text-forge-ash text-[11px] uppercase tracking-[0.14em] font-[family-name:var(--font-mono)] mt-2">
-                USD, billed annually
+                Approximate monthly rate, billed annually
               </p>
             )}
 
             <p className="text-forge-smoke text-sm mt-2">
               includes 3 staff seats · +{formatUsd(seatMonthly)}/month per additional staff seat
             </p>
+            <p className="text-forge-smoke text-sm mt-1">
+              +{formatSeatUsd(subMonthly)}/month per Sub seat
+            </p>
 
             {plan === "monthly" ? (
-              <p className="text-forge-graphite text-xs mt-1">
+              <p className="text-forge-smoke text-xs mt-2">
                 (Annual: {formatUsd(baseAnnualAsMonthly)}/month · +
-                {formatUsd(seatAnnualAsMonthly)}/month per additional staff seat · save 20%)
+                {formatUsd(seatAnnualAsMonthly)}/month per additional staff seat · +
+                {formatSeatUsd(annualSubAsMonthly())}/month per Sub seat, approximately)
               </p>
             ) : (
               // Smoke, not graphite: this is the amount that actually gets
               // charged, so it stays secondary to the headline but readable.
-              <p className="text-forge-smoke text-xs mt-1">
+              <p className="text-forge-ash text-sm mt-2">
                 billed as {formatUsd(annual)}/yr · save 20%
               </p>
             )}
           </div>
 
-          {/* Seat stepper - starts at 3, min 3 */}
-          <div className="flex items-center justify-between border border-white/10 px-4 py-3">
-            <div>
-              <p className="text-forge-white text-sm font-medium tabular-nums">
-                {seats} staff seats
+          {/* One owner is the minimum staff roster; the base still includes three. */}
+          <div className="flex items-center justify-between gap-3 border border-white/10 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-forge-white text-sm font-medium tabular-nums" aria-live="polite">
+                {seats} staff {seats === 1 ? "seat" : "seats"}
               </p>
-              <p className="text-forge-graphite text-xs mt-0.5">
+              <p className="text-forge-smoke text-xs mt-0.5">
                 {extraSeats === 0
-                  ? "your first 3 staff seats are included"
+                  ? "3 included"
                   : `3 included + ${extraSeats} × ${formatUsd(seatMonthly)}/month`}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex shrink-0 items-center gap-2">
               <button
-                onClick={() => setSeats((s) => Math.max(MIN_SEATS, s - 1))}
-                disabled={seats <= MIN_SEATS}
-                aria-label="Remove a seat"
-                className="p-2 border border-forge-graphite text-forge-ash hover:text-forge-white hover:border-forge-smoke disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                type="button"
+                onClick={() => setSeats((s) => Math.max(MIN_STAFF_SEATS, s - 1))}
+                disabled={seats <= MIN_STAFF_SEATS}
+                aria-label="Remove a staff seat"
+                className="min-h-11 min-w-11 p-2 border border-forge-graphite text-forge-ash hover:text-forge-white hover:border-forge-smoke disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:outline-2 focus-visible:outline-forge-cyan focus-visible:outline-offset-2"
               >
                 <Minus size={16} strokeWidth={2} />
               </button>
               <button
+                type="button"
                 onClick={() => setSeats((s) => s + 1)}
-                aria-label="Add a seat"
-                className="p-2 border border-forge-graphite text-forge-ash hover:text-forge-white hover:border-forge-smoke transition-colors"
+                aria-label="Add a staff seat"
+                className="min-h-11 min-w-11 p-2 border border-forge-graphite text-forge-ash hover:text-forge-white hover:border-forge-smoke transition-colors focus-visible:outline-2 focus-visible:outline-forge-cyan focus-visible:outline-offset-2"
               >
                 <Plus size={16} strokeWidth={2} />
               </button>
             </div>
           </div>
 
-          {/* F-075 (RZ ruling 2026-09-07). Every label above says STAFF
-              seat now, and this line is why: the arithmetic this card does
-              is 249 + 39 x (seats - 3), which is the staff formula and
-              only the staff formula. Subs are a second class that the
-              stepper deliberately does not model, so a stepper that called
-              them all "seats" was quoting the staff price for a sub. The
-              agreement (MSA 3.4) has always priced them apart; the card
-              now says so instead of leaving the reader to assume. */}
+          <div className="flex items-center justify-between gap-3 border border-white/10 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-forge-white text-sm font-medium tabular-nums" aria-live="polite">
+                {subSeats} Sub {subSeats === 1 ? "seat" : "seats"}
+              </p>
+              <p className="text-forge-smoke text-xs mt-0.5">
+                {formatSeatUsd(subMonthly)}/month each
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setSubSeats((s) => Math.max(0, s - 1))}
+                disabled={subSeats === 0}
+                aria-label="Remove a Sub seat"
+                className="min-h-11 min-w-11 p-2 border border-forge-graphite text-forge-ash hover:text-forge-white hover:border-forge-smoke disabled:opacity-30 disabled:cursor-not-allowed transition-colors focus-visible:outline-2 focus-visible:outline-forge-cyan focus-visible:outline-offset-2"
+              >
+                <Minus size={16} strokeWidth={2} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubSeats((s) => s + 1)}
+                aria-label="Add a Sub seat"
+                className="min-h-11 min-w-11 p-2 border border-forge-graphite text-forge-ash hover:text-forge-white hover:border-forge-smoke transition-colors focus-visible:outline-2 focus-visible:outline-forge-cyan focus-visible:outline-offset-2"
+              >
+                <Plus size={16} strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+
           <p className="text-forge-smoke text-xs">
             Subcontractors are separate:{" "}
             {plan === "annual"
               ? `${formatSeatUsd(SUB_SEAT_ANNUAL)}/year`
               : `${formatSeatUsd(SUB_SEAT_MONTHLY)}/month`}{" "}
             per sub seat, always an add-on. A sub seat never uses one of your{" "}
-            {INCLUDED_SEATS} included staff seats, so the stepper above does not
-            count them.
+            {INCLUDED_SEATS} included staff seats. Both counts are included in
+            your quote above.
           </p>
 
           {/* Feature list */}
@@ -255,9 +257,9 @@ export default function PlanConfigurator() {
             </ul>
           </div>
 
-          {/* CTAs - plan + seats ride along to the dashboard signup */}
+          {/* Trial navigation; the calculator does not configure an account. */}
           <div className="flex flex-col gap-3 mt-2">
-            <Button href={trialSignupUrl(plan, seats)} variant="primary" size="lg" className="w-full">
+            <Button href={trialSignupUrl()} variant="primary" size="sm" className="w-full sm:px-10 sm:py-5 sm:text-xl">
               Start Free Trial
             </Button>
             <p className="text-forge-smoke text-sm text-center">
@@ -273,7 +275,7 @@ export default function PlanConfigurator() {
             </p>
           </div>
 
-          <p className="text-forge-graphite text-xs text-center">
+          <p className="text-forge-smoke text-xs text-center">
             14-day free trial on both plans. No credit card required to start.
           </p>
         </div>

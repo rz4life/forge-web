@@ -1,11 +1,10 @@
-// Production pricing - PRD Section 8 (Ethan Rife, Michael-audited, 2026-07).
-// These are the ONLY approved numbers. Client-side math here is a display
-// convenience; the future Stripe Checkout flow (PRD Section 13 - blocked on
-// backend work) recomputes entitlements server-side from subscription line
-// items and never trusts these values.
+// F-075, ruled GO 2026-09-07: staff and Sub seats are separate classes.
+// Prices mirror the backend's src/billing/seat-pricing.ts. This calculator
+// displays a quote; the backend derives billable counts from the real roster.
 
 export const INCLUDED_SEATS = 3;
-export const MIN_SEATS = 3;
+export const MIN_STAFF_SEATS = 1;
+export const DEFAULT_STAFF_SEATS = 3;
 
 /** $/month, includes the first 3 seats. */
 export const BASE_MONTHLY = 249;
@@ -18,7 +17,7 @@ export const SEAT_ANNUAL = 374;
 
 /*
  * SUB SEATS - the second seat class (F-001, RZ 2026-08-28; annual ratified
- * 2026-08-31; marketing copy corrected under F-075, RZ 2026-09-07).
+ * 2026-08-31; marketing copy corrected under F-075, 2026-09-07).
  *
  * A sub seat is NOT a discounted staff seat, and the difference is not
  * only the price:
@@ -28,11 +27,8 @@ export const SEAT_ANNUAL = 374;
  *   - a sub seat never consumes one of the INCLUDED_SEATS and never counts
  *     toward a seat limit. It is always an add-on.
  *
- * So sub seats are deliberately NOT part of `monthlyTotal` / `annualTotal`
- * above. Those two answer "what does a crew of N staff cost", which is what
- * the stepper on the pricing card asks. Folding subs into the same
- * arithmetic would put them back inside the included three, which is
- * exactly the error this correction removes.
+ * The calculator accepts separate staff and Sub counts. Only staff use
+ * the included allowance; adding a Sub never changes the staff count.
  *
  * These mirror `SUB_SEAT_MONTHLY_USD` / `SUB_SEAT_ANNUAL_USD` in
  * forge-backend/src/billing/seat-pricing.ts, which is the SSOT for what
@@ -46,14 +42,22 @@ export const SUB_SEAT_ANNUAL = 95.9;
 
 export type BillingPlan = "monthly" | "annual";
 
-/** Monthly total in dollars: 249 + 39 × (seats − 3). */
-export function monthlyTotal(seats: number): number {
-  return BASE_MONTHLY + SEAT_MONTHLY * Math.max(0, seats - INCLUDED_SEATS);
+/** Exact monthly quote; calculate in cents so Sub totals retain cents. */
+export function monthlyTotal(staffSeats: number, subSeats = 0): number {
+  return (
+    Math.round(BASE_MONTHLY * 100) +
+    Math.round(SEAT_MONTHLY * 100) * Math.max(0, staffSeats - INCLUDED_SEATS) +
+    Math.round(SUB_SEAT_MONTHLY * 100) * subSeats
+  ) / 100;
 }
 
-/** Annual total in dollars: 2390 + 374 × (seats − 3). */
-export function annualTotal(seats: number): number {
-  return BASE_ANNUAL + SEAT_ANNUAL * Math.max(0, seats - INCLUDED_SEATS);
+/** Exact annual quote, including every Sub at the annual Sub price. */
+export function annualTotal(staffSeats: number, subSeats = 0): number {
+  return (
+    Math.round(BASE_ANNUAL * 100) +
+    Math.round(SEAT_ANNUAL * 100) * Math.max(0, staffSeats - INCLUDED_SEATS) +
+    Math.round(SUB_SEAT_ANNUAL * 100) * subSeats
+  ) / 100;
 }
 
 /**
@@ -74,8 +78,13 @@ export function annualAsMonthly(annualAmount: number): number {
   return Math.round(annualAmount / 12);
 }
 
+/** Sub rates retain cents; $95.90/year displays as approximately $7.99/month. */
+export function annualSubAsMonthly(): number {
+  return Math.round((SUB_SEAT_ANNUAL * 100) / 12) / 100;
+}
+
 /**
- * The headline monthly figure for the annual plan, built from the SAME two
+ * The headline monthly figure for the annual plan, built from the SAME
  * per-part numbers the card prints underneath it.
  *
  * ── Why this is not `annualAsMonthly(annualTotal(seats))` ────────────────
@@ -102,27 +111,31 @@ export function annualAsMonthly(annualAmount: number): number {
  * ("billed as $3,138/yr"). The truth is on the card either way; this decides
  * which number carries it.
  *
- * Display only. Pricing logic is untouched: `annualTotal()` is still what a
- * customer is charged, and it is exact.
+ * Sub seats add the displayed $7.99 monthly equivalent each, retaining the
+ * same sum-of-rounded-parts convention. The exact annual quote remains
+ * visible underneath; the rounded headline is not an installment amount.
  */
-export function annualHeadlineMonthly(seats: number): number {
-  const extra = Math.max(0, seats - INCLUDED_SEATS);
-  return annualAsMonthly(BASE_ANNUAL) + annualAsMonthly(SEAT_ANNUAL) * extra;
+export function annualHeadlineMonthly(staffSeats: number, subSeats = 0): number {
+  const extra = Math.max(0, staffSeats - INCLUDED_SEATS);
+  return (
+    annualAsMonthly(BASE_ANNUAL) * 100 +
+    annualAsMonthly(SEAT_ANNUAL) * 100 * extra +
+    Math.round(annualSubAsMonthly() * 100) * subSeats
+  ) / 100;
 }
 
 export function formatUsd(amount: number): string {
-  return `$${amount.toLocaleString("en-US")}`;
+  return `$${amount.toLocaleString("en-US", {
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 /**
  * A price that has cents, rendered with both of them, always.
  *
- * `formatUsd` is right for the whole-dollar catalog prices and wrong for
- * $9.99: `(9.99).toLocaleString("en-US")` happens to give "9.99" today,
- * but nothing in that call pins the decimals, and a price that renders as
- * "$9.9" or rounds to "$10" is a different price. The sub-seat figure is
- * the only one on this site with cents, so it gets a formatter that says
- * two decimals out loud. Mirrors `formatSeatUsd` in the web dashboard.
+ * Unlike whole-dollar staff rates, Sub rates always show two decimals.
+ * Mirrors `formatSeatUsd` in the web dashboard.
  */
 export function formatSeatUsd(amount: number): string {
   return `$${amount.toLocaleString("en-US", {

@@ -38,14 +38,16 @@ jobs:
       - name: No spaced em dashes in rendered copy
         run: node scripts/check-em-dashes.mjs
 
+      - name: Actual pricing source regression tests
+        run: npm run test:pricing
+
       # `tsc --noEmit`. Catches the class this repo is most exposed to: a copy
       # or constant edit that breaks a type nothing else would notice until
       # Vercel built it.
       - name: Typecheck
         run: npx tsc --noEmit
 
-      # `next build`. The landing site has no tests, so this is the only thing
-      # that proves every route still renders. It is fast (about 3s) and it
+      # `next build` proves every route still renders. It is fast and it
       # catches a broken import or a bad JSX edit that typecheck alone can miss
       # in a server component.
       - name: Build
@@ -67,9 +69,5 @@ jobs:
 # improvement. Neither is this PR, because adding a guard and simultaneously
 # excusing the violations it finds is how an allowlist becomes permanent.
 #
-# Tests. There is no test script in this repo and no test framework installed.
-# A marketing site of 40 source files with a `next build` gate is not obviously
-# under-covered, but if interactive behaviour grows (the pricing configurator
-# already has real arithmetic in `src/lib/pricing.ts`, and its rounding is
-# load-bearing on what a customer is quoted), that arithmetic wants unit tests
-# and this is where they would run.
+# Pricing tests execute src/lib/pricing.ts using the existing TypeScript
+# compiler and Node test runner. No additional test framework is required.
