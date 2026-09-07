@@ -46,9 +46,26 @@ export function loginUrl(): string {
 
 // "Start Free Trial" routes to the dashboard signup, which already
 // auto-provisions accounts card-free (14-day trial). plan + seats ride along
-// as query params so the dashboard - and the future Stripe Checkout flow
-// (PRD Section 13, blocked on backend work) - can pre-fill the choice made
-// on the marketing site. v1 is trial-signup routing, NOT live Stripe.
+// as query params so the dashboard can pre-fill the choice made here.
+//
+// THIS URL IS A CROSS-REPO CONTRACT. Updated 2026-09-07 (F-121): the
+// dashboard now actually reads all three names. `mode` opens the signup
+// tab; `plan` is carried to Settings -> Billing and becomes the
+// `billingPeriod` sent to Stripe Checkout, so a visitor who picks annual
+// gets an annual session without choosing again; `seats` is carried and
+// shown, but never sent, because the backend derives the billed quantity
+// from the company's real seat count.
+//
+// That was NOT true when this comment was first written. The note here used
+// to say the pre-fill was "blocked on backend work" and the app read `mode`
+// and dropped the rest, which is how a visitor ended up answering the same
+// question twice for four months. Nothing about it was visible: both sites
+// built, both deployed, nothing logged.
+//
+// Renaming any of the three names is a breaking change in a repository this
+// one's CI cannot see. `scripts/check-signup-url-contract.mjs` pins this
+// side; `Forge_Web/Forge/dashboard/tests/signupIntent.test.ts` pins the
+// other. Move both in the same window.
 // Default is ANNUAL here and MONTHLY in the app. That asymmetry is a CEO
 // decision (Ethan Rife, 2026-08-09: "Annual as default on site, monthly as
 // default in app"), not an inconsistency to tidy up: the marketing site is

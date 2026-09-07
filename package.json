@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "check:em-dashes": "node scripts/check-em-dashes.mjs",
-    "ci": "node scripts/check-em-dashes.mjs && tsc --noEmit && next build"
+    "check:signup-url": "node scripts/check-signup-url-contract.mjs",
+    "ci": "node scripts/check-em-dashes.mjs && node scripts/check-signup-url-contract.mjs && tsc --noEmit && next build"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

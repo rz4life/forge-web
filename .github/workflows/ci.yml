@@ -38,6 +38,19 @@ jobs:
       - name: No spaced em dashes in rendered copy
         run: node scripts/check-em-dashes.mjs
 
+      # The handoff into the product. `trialSignupUrl` in src/lib/constants.ts
+      # sends the visitor's plan and seat choice to app.forge.equipment as
+      # query parameters, and the dashboard reads them by those exact names.
+      # Renaming one, dropping one, or reverting the pricing CTA to a bare
+      # `trialSignupUrl()` breaks that handoff SILENTLY: both repos stay
+      # green, `tsc` and `next build` are both perfectly happy, and the only
+      # symptom is a customer being asked for their billing period a second
+      # time inside the app. That is F-121, and it went unnoticed for four
+      # months. The script self-tests its own detector before reporting
+      # clean, and exits 2 rather than 0 if it cannot run.
+      - name: Signup URL contract with the dashboard
+        run: node scripts/check-signup-url-contract.mjs
+
       # `tsc --noEmit`. Catches the class this repo is most exposed to: a copy
       # or constant edit that breaks a type nothing else would notice until
       # Vercel built it.
