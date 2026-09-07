@@ -74,7 +74,11 @@ export const ANDROID_WAITLIST_ENABLED =
 
 export type FaqItem = { question: string; answer: string };
 
-// Pricing-page FAQ - PRD 9.10, word-for-word (7 Q&As).
+// Pricing-page FAQ - PRD 9.10, word-for-word (7 Q&As), with one exception
+// noted inline: the "What counts as a seat?" answer was rewritten under
+// F-075 (RZ ruling 2026-09-07), because the PRD wording priced a sub seat
+// at the staff rate and let it consume an included seat, and the Master
+// Subscription Agreement says it does neither.
 export const PRICING_FAQ: FaqItem[] = [
   {
     question: "Do I need to talk to sales to get started?",
@@ -87,9 +91,30 @@ export const PRICING_FAQ: FaqItem[] = [
       "No. Use Forge free for 14 days without entering payment info. We'll remind you before the trial ends. Add a payment method any time to keep your seats active. If you don't, your account pauses. Nothing gets deleted.",
   },
   {
+    // F-075 (RZ ruling 2026-09-07). The old answer was wrong in three ways
+    // at once, and all three came from the same mistake: it had one seat
+    // model where the product has two.
+    //
+    //   1. it listed "sub" alongside owner/admin/PM/estimator as if a sub
+    //      occupied the same kind of seat;
+    //   2. it said the first 3 of those are included, so a sub read as
+    //      eating one of the three a contractor pays the base price for;
+    //   3. it priced every one of them at $39/month.
+    //
+    // The Master Subscription Agreement is the half that is right. Section
+    // 3.4 (src/content/msa/v1.0.md): "Customer may add Sub Seats for
+    // subcontractors at the Sub Seat Fee stated in the Order Form ... and
+    // are not counted toward the Included Seats." Sub seats bill at
+    // $9.99/month, always as an add-on, and never consume one of the
+    // included three. The ruling is that the agreement stands and this
+    // page changes.
+    //
+    // Three ways wrong in one paragraph is the tell that it was written
+    // from an OLDER seat model, so the same wording was swept for
+    // everywhere a customer can read it rather than patched only here.
     question: "What counts as a seat?",
     answer:
-      "Anyone who logs into Forge: owner, admin, PM, estimator, or sub. Your first 3 are included in the base price. Each additional teammate is $39/month, or $374/year on the annual plan.",
+      "There are two kinds. A staff seat is anyone who runs the job: owner, admin, PM, or estimator. Your first 3 staff seats are included in the base price, and each one after that is $39/month, or $374/year on the annual plan. A sub seat is for a subcontractor, and it works differently: it is always an add-on at $9.99/month, it never uses one of your 3 included seats, and it never counts toward your seat limit.",
   },
   {
     question: "Is there a contract?",

@@ -10,12 +10,15 @@ import {
   INCLUDED_SEATS,
   SEAT_MONTHLY,
   SEAT_ANNUAL,
+  SUB_SEAT_MONTHLY,
+  SUB_SEAT_ANNUAL,
   BASE_ANNUAL,
   monthlyTotal,
   annualTotal,
   annualAsMonthly,
   annualHeadlineMonthly,
   formatUsd,
+  formatSeatUsd,
   type BillingPlan,
 } from "@/lib/pricing";
 
@@ -149,13 +152,13 @@ export default function PlanConfigurator() {
             )}
 
             <p className="text-forge-smoke text-sm mt-2">
-              includes 3 seats · +{formatUsd(seatMonthly)}/month per additional seat
+              includes 3 staff seats · +{formatUsd(seatMonthly)}/month per additional staff seat
             </p>
 
             {plan === "monthly" ? (
               <p className="text-forge-graphite text-xs mt-1">
                 (Annual: {formatUsd(baseAnnualAsMonthly)}/month · +
-                {formatUsd(seatAnnualAsMonthly)}/month per additional seat · save 20%)
+                {formatUsd(seatAnnualAsMonthly)}/month per additional staff seat · save 20%)
               </p>
             ) : (
               // Smoke, not graphite: this is the amount that actually gets
@@ -170,11 +173,11 @@ export default function PlanConfigurator() {
           <div className="flex items-center justify-between border border-white/10 px-4 py-3">
             <div>
               <p className="text-forge-white text-sm font-medium tabular-nums">
-                {seats} seats
+                {seats} staff seats
               </p>
               <p className="text-forge-graphite text-xs mt-0.5">
                 {extraSeats === 0
-                  ? "your first 3 seats are included"
+                  ? "your first 3 staff seats are included"
                   : `3 included + ${extraSeats} × ${formatUsd(seatMonthly)}/month`}
               </p>
             </div>
@@ -196,6 +199,24 @@ export default function PlanConfigurator() {
               </button>
             </div>
           </div>
+
+          {/* F-075 (RZ ruling 2026-09-07). Every label above says STAFF
+              seat now, and this line is why: the arithmetic this card does
+              is 249 + 39 x (seats - 3), which is the staff formula and
+              only the staff formula. Subs are a second class that the
+              stepper deliberately does not model, so a stepper that called
+              them all "seats" was quoting the staff price for a sub. The
+              agreement (MSA 3.4) has always priced them apart; the card
+              now says so instead of leaving the reader to assume. */}
+          <p className="text-forge-smoke text-xs">
+            Subcontractors are separate:{" "}
+            {plan === "annual"
+              ? `${formatSeatUsd(SUB_SEAT_ANNUAL)}/year`
+              : `${formatSeatUsd(SUB_SEAT_MONTHLY)}/month`}{" "}
+            per sub seat, always an add-on. A sub seat never uses one of your{" "}
+            {INCLUDED_SEATS} included staff seats, so the stepper above does not
+            count them.
+          </p>
 
           {/* Feature list */}
           <div>

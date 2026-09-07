@@ -16,6 +16,34 @@ export const BASE_ANNUAL = 2390;
 /** $/year per seat above the included 3 (20% off). Reads as $31/month. */
 export const SEAT_ANNUAL = 374;
 
+/*
+ * SUB SEATS - the second seat class (F-001, RZ 2026-08-28; annual ratified
+ * 2026-08-31; marketing copy corrected under F-075, RZ 2026-09-07).
+ *
+ * A sub seat is NOT a discounted staff seat, and the difference is not
+ * only the price:
+ *
+ *   - every sub seat is billed, from the first one. There is no included
+ *     allowance for subs, and the base price does not cover any;
+ *   - a sub seat never consumes one of the INCLUDED_SEATS and never counts
+ *     toward a seat limit. It is always an add-on.
+ *
+ * So sub seats are deliberately NOT part of `monthlyTotal` / `annualTotal`
+ * above. Those two answer "what does a crew of N staff cost", which is what
+ * the stepper on the pricing card asks. Folding subs into the same
+ * arithmetic would put them back inside the included three, which is
+ * exactly the error this correction removes.
+ *
+ * These mirror `SUB_SEAT_MONTHLY_USD` / `SUB_SEAT_ANNUAL_USD` in
+ * forge-backend/src/billing/seat-pricing.ts, which is the SSOT for what
+ * Stripe actually charges. 9.99 x 12 x 0.8 = 95.904, rounded to $95.90,
+ * the same ~20% annual ratio as $249 -> $2,390 and $39 -> $374.
+ */
+/** $/month per sub seat. Always an add-on; no included allowance. */
+export const SUB_SEAT_MONTHLY = 9.99;
+/** $/year per sub seat (20% off), same ratio as the rest of the catalog. */
+export const SUB_SEAT_ANNUAL = 95.9;
+
 export type BillingPlan = "monthly" | "annual";
 
 /** Monthly total in dollars: 249 + 39 × (seats − 3). */
@@ -84,4 +112,21 @@ export function annualHeadlineMonthly(seats: number): number {
 
 export function formatUsd(amount: number): string {
   return `$${amount.toLocaleString("en-US")}`;
+}
+
+/**
+ * A price that has cents, rendered with both of them, always.
+ *
+ * `formatUsd` is right for the whole-dollar catalog prices and wrong for
+ * $9.99: `(9.99).toLocaleString("en-US")` happens to give "9.99" today,
+ * but nothing in that call pins the decimals, and a price that renders as
+ * "$9.9" or rounds to "$10" is a different price. The sub-seat figure is
+ * the only one on this site with cents, so it gets a formatter that says
+ * two decimals out loud. Mirrors `formatSeatUsd` in the web dashboard.
+ */
+export function formatSeatUsd(amount: number): string {
+  return `$${amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 }
