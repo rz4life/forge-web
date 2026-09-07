@@ -75,10 +75,13 @@ export const ANDROID_WAITLIST_ENABLED =
 export type FaqItem = { question: string; answer: string };
 
 // Pricing-page FAQ - PRD 9.10, word-for-word (7 Q&As), with one exception
-// noted inline: the "What counts as a seat?" answer was rewritten under
-// F-075 (RZ ruling 2026-09-07), because the PRD wording priced a sub seat
-// at the staff rate and let it consume an included seat, and the Master
-// Subscription Agreement says it does neither.
+// noted inline: the "What counts as a seat?" answer carries TWO rulings of
+// 2026-09-07 that landed together. F-075 rewrote it around the two seat
+// classes, because the old wording priced a sub seat at the staff rate and
+// let it consume an included seat, and the Master Subscription Agreement
+// says it does neither. F-076 added the access-scope sentence, because the
+// same answer listed five interchangeable roles while the agreement defines
+// a Sub Seat by what it cannot see.
 export const PRICING_FAQ: FaqItem[] = [
   {
     question: "Do I need to talk to sales to get started?",
@@ -112,9 +115,29 @@ export const PRICING_FAQ: FaqItem[] = [
     // Three ways wrong in one paragraph is the tell that it was written
     // from an OLDER seat model, so the same wording was swept for
     // everywhere a customer can read it rather than patched only here.
+    // F-076 (RZ 2026-09-07). The second sentence is the only edit to the
+    // PRD 9.10 wording, and it is here because this answer is the other
+    // place on the pricing surface that lists the roles. It read as five
+    // interchangeable seats; the Master Subscription Agreement (1.6)
+    // defines a Sub Seat by what it cannot see. Stated as the benefit it
+    // is to a general contractor rather than as a limitation, per the
+    // ruling.
+    //
+    // The two PRICE sentences are deliberately untouched, to the byte.
+    // Whether a sub seat is $39 and consumes one of the included three,
+    // or the $9.99 add-on that never does, is F-075 and is not this
+    // ticket's to answer. Editing them here would decide that ruling by
+    // accident.
+    //
+    // MERGED 2026-09-07: F-075 and F-076 both rewrote this one answer, from
+    // opposite ends. F-076 deliberately left the two PRICE sentences
+    // byte-identical so it would not decide F-075 by accident; F-075 rewrote
+    // exactly those sentences and said nothing about access. The union below
+    // is what both rulings together require: two seat classes with the right
+    // prices, AND the sub scope stated as the capability it is to a GC.
     question: "What counts as a seat?",
     answer:
-      "There are two kinds. A staff seat is anyone who runs the job: owner, admin, PM, or estimator. Your first 3 staff seats are included in the base price, and each one after that is $39/month, or $374/year on the annual plan. A sub seat is for a subcontractor, and it works differently: it is always an add-on at $9.99/month, it never uses one of your 3 included seats, and it never counts toward your seat limit.",
+      "There are two kinds. A staff seat is anyone who runs the job: owner, admin, PM, or estimator. Your first 3 staff seats are included in the base price, and each one after that is $39/month, or $374/year on the annual plan. A sub seat is for a subcontractor, and it works differently: it is always an add-on at $9.99/month, it never uses one of your 3 included seats, and it never counts toward your seat limit. A sub's access is scoped to the tasks you assign them and their own pricing, with no view of the job's full scope, your estimates, or anyone else's numbers.",
   },
   {
     question: "Is there a contract?",
