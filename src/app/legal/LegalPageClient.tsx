@@ -15,10 +15,20 @@ const NAV_SECTIONS = [
   { id: "privacy", label: "Privacy Policy" },
   { id: "refund", label: "Refund Policy" },
   { id: "disclaimer", label: "Disclaimer" },
-  // Last on purpose. The MSA applies to annual and contracted deals rather
-  // than to self-serve signups, so it sits below the documents every visitor
-  // needs. Readers who need it arrive by the /legal#msa anchor or the dated
-  // /legal/msa/vX.Y URL their Order Form cites, not by scrolling.
+  // Last on purpose. The MSA governs deals executed by an ORDER FORM; every
+  // self-serve signup, monthly or annual, stays under the Terms of Service.
+  // So it sits below the documents every visitor needs. Readers who need it
+  // arrive by the /legal#msa anchor or the dated /legal/msa/vX.Y URL their
+  // Order Form cites, not by scrolling.
+  //
+  // The axis matters, which is why this comment no longer says "annual and
+  // contracted" (F-077). That phrase joined two different things: how a deal
+  // was SIGNED, and how often it is BILLED. Self-serve annual is annual, so
+  // it fell on both sides, and the two documents disagree about how such a
+  // subscription ends. Section 4.2 requires 30 days' written notice of
+  // non-renewal; the pricing FAQ tells a self-serve buyer they can cancel at
+  // renewal. Michael ruled the Terms of Service governs self-serve annual, so
+  // the boundary is now drawn on one axis only: an Order Form, or not.
   { id: "msa", label: "Master Subscription Agreement" },
 ];
 
