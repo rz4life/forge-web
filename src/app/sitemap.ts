@@ -1,8 +1,28 @@
 import type { MetadataRoute } from "next";
 
+import { listMsaVersions } from "@/lib/msa";
+import { MSA_ARCHIVE_PATH, msaVersionPath } from "@/lib/msa-routes";
+
 const BASE_URL = "https://www.forge.equipment";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // Derived from the content directory, so publishing a new version of the
+  // agreement lists it here without anyone editing this file.
+  const msaArchive: MetadataRoute.Sitemap = [
+    {
+      url: `${BASE_URL}${MSA_ARCHIVE_PATH}`,
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    ...listMsaVersions().map((version) => ({
+      url: `${BASE_URL}${msaVersionPath(version)}`,
+      // A published version's text never changes. That is the whole point of
+      // the dated URL: an Order Form cites it and it has to stay put.
+      changeFrequency: "never" as const,
+      priority: 0.2,
+    })),
+  ];
+
   return [
     {
       url: `${BASE_URL}/`,
@@ -29,5 +49,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.3,
     },
+    ...msaArchive,
   ];
 }
