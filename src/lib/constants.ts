@@ -60,8 +60,8 @@ export const ANDROID_WAITLIST_ENABLED =
 
 export type FaqItem = { question: string; answer: string };
 
-// Pricing FAQ, including the F-075/F-076 decisions of 2026-09-07:
-// independent staff/Sub pricing and access limited to assigned tasks.
+// Pricing FAQ, including the F-075/F-076 decisions through2026-09-08:
+// shared included seats, additional seats priced by class, assigned-task Sub access.
 export const PRICING_FAQ: FaqItem[] = [
   {
     question: "Do I need to talk to sales to get started?",
@@ -74,19 +74,16 @@ export const PRICING_FAQ: FaqItem[] = [
       "No. Use Forge free for 14 days without entering payment info. We'll remind you before the trial ends. Add a payment method any time to keep your seats active. If you don't, your account pauses. Nothing gets deleted.",
   },
   {
-    // F-075 ruling (2026-09-07): separate staff/Sub prices and allowances,
-    // verified against backend src/billing/seat-pricing.ts.
-    // F-076 ruling (2026-09-07): promote assigned-task access, not a full
-    // job role or Sub bid submission. No supplied MSA contains the old
-    // section references; these decisions and enforced APIs are the basis.
+    // F075 Sep8: included seats are type-agnostic, staff first.
+    // F076: describe assigned-task access without promising bid submission.
     question: "What counts as a seat?",
     answer:
-      "There are two kinds. A staff seat is anyone who runs the job: owner, admin, PM, or estimator. Your first 3 staff seats are included in the base price, and each one after that is $39/month, or $374/year on the annual plan. A sub seat is for a subcontractor, and it works differently: it is always an add-on at $9.99/month, or $95.90/year on the annual plan. It never uses one of your 3 included seats, and it never counts toward your seat limit. A sub's access is scoped to the tasks you assign them, with no view of the job's full scope, your estimates, or anyone else's numbers.",
+      "A staff seat is an owner, admin, PM, or estimator. A Sub seat is for a subcontractor. Your first 3 seats can be either kind and are included in the base price. Staff use the included seats first, then Subs use any remaining. Beyond those 3, each additional staff seat is $39/month or $374/year, and each additional Sub seat is $9.99/month or $95.90/year. A Sub can access assigned tasks, with no view of the job's full scope, your estimates, or anyone else's pricing.",
   },
   {
     question: "Is there a contract?",
     answer:
-      "No. Monthly is month-to-month. Annual is billed once a year at a 20% discount and can be cancelled at renewal.",
+      "Monthly is month-to-month. Annual is billed once a year at a 20% discount and can be cancelled at renewal.",
   },
   {
     question: "What platforms does Forge run on?",

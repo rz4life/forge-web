@@ -1,4 +1,4 @@
-// F-075, ruled GO 2026-09-07: staff and Sub seats are separate classes.
+// F-075, RZ ruling2026-09-08: first three seats include either staff or Sub.
 // Prices mirror the backend's src/billing/seat-pricing.ts. This calculator
 // displays a quote; the backend derives billable counts from the real roster.
 
@@ -15,48 +15,36 @@ export const BASE_ANNUAL = 2390;
 /** $/year per seat above the included 3 (20% off). Reads as $31/month. */
 export const SEAT_ANNUAL = 374;
 
-/*
- * SUB SEATS - the second seat class (F-001, RZ 2026-08-28; annual ratified
- * 2026-08-31; marketing copy corrected under F-075, 2026-09-07).
- *
- * A sub seat is NOT a discounted staff seat, and the difference is not
- * only the price:
- *
- *   - every sub seat is billed, from the first one. There is no included
- *     allowance for subs, and the base price does not cover any;
- *   - a sub seat never consumes one of the INCLUDED_SEATS and never counts
- *     toward a seat limit. It is always an add-on.
- *
- * The calculator accepts separate staff and Sub counts. Only staff use
- * the included allowance; adding a Sub never changes the staff count.
- *
- * These mirror `SUB_SEAT_MONTHLY_USD` / `SUB_SEAT_ANNUAL_USD` in
- * forge-backend/src/billing/seat-pricing.ts, which is the SSOT for what
- * Stripe actually charges. 9.99 x 12 x 0.8 = 95.904, rounded to $95.90,
- * the same ~20% annual ratio as $249 -> $2,390 and $39 -> $374.
- */
-/** $/month per sub seat. Always an add-on; no included allowance. */
+// Staff use the three included seats first; Subs use any allowance left.
+// Additional seats retain their own class rate. These amounts match the
+// backend catalog; the backend derives actual counts from the company roster.
+/** $/month per additional Sub seat. */
 export const SUB_SEAT_MONTHLY = 9.99;
 /** $/year per sub seat (20% off), same ratio as the rest of the catalog. */
 export const SUB_SEAT_ANNUAL = 95.9;
 
 export type BillingPlan = "monthly" | "annual";
 
+/** Subs beyond the shared allowance, after staff consume it first. */
+export function billableSubSeats(staffSeats: number, subSeats: number): number {
+  return Math.max(0, subSeats - Math.max(0, INCLUDED_SEATS - staffSeats));
+}
+
 /** Exact monthly quote; calculate in cents so Sub totals retain cents. */
 export function monthlyTotal(staffSeats: number, subSeats = 0): number {
   return (
     Math.round(BASE_MONTHLY * 100) +
     Math.round(SEAT_MONTHLY * 100) * Math.max(0, staffSeats - INCLUDED_SEATS) +
-    Math.round(SUB_SEAT_MONTHLY * 100) * subSeats
+    Math.round(SUB_SEAT_MONTHLY * 100) * billableSubSeats(staffSeats, subSeats)
   ) / 100;
 }
 
-/** Exact annual quote, including every Sub at the annual Sub price. */
+/** Exact annual quote for the base and additional seats by class. */
 export function annualTotal(staffSeats: number, subSeats = 0): number {
   return (
     Math.round(BASE_ANNUAL * 100) +
     Math.round(SEAT_ANNUAL * 100) * Math.max(0, staffSeats - INCLUDED_SEATS) +
-    Math.round(SUB_SEAT_ANNUAL * 100) * subSeats
+    Math.round(SUB_SEAT_ANNUAL * 100) * billableSubSeats(staffSeats, subSeats)
   ) / 100;
 }
 
@@ -111,7 +99,7 @@ export function annualSubAsMonthly(): number {
  * ("billed as $3,138/yr"). The truth is on the card either way; this decides
  * which number carries it.
  *
- * Sub seats add the displayed $7.99 monthly equivalent each, retaining the
+ * Additional Sub seats add the displayed $7.99 monthly equivalent, retaining the
  * same sum-of-rounded-parts convention. The exact annual quote remains
  * visible underneath; the rounded headline is not an installment amount.
  */
@@ -120,7 +108,7 @@ export function annualHeadlineMonthly(staffSeats: number, subSeats = 0): number 
   return (
     annualAsMonthly(BASE_ANNUAL) * 100 +
     annualAsMonthly(SEAT_ANNUAL) * 100 * extra +
-    Math.round(annualSubAsMonthly() * 100) * subSeats
+    Math.round(annualSubAsMonthly() * 100) * billableSubSeats(staffSeats, subSeats)
   ) / 100;
 }
 

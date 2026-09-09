@@ -29,10 +29,8 @@ test("catalog and controls match the approved two-class pricing", () => {
   assert.equal(pricing.DEFAULT_STAFF_SEATS, 3);
 });
 
-// Fixed expected quotes use the backend F-075 catalog and billable seat
-// contract, verified by executing seat-pricing.ts + plan-catalog.ts at
-// backend 7b9041a29848d136bc1145fc802d5150dbc51a34. In particular, 2 staff
-// and 1 Sub produce base ×1, staff ×0, Sub ×1: $258.99/mo, $2,485.90/yr.
+// Sep8 F075 ruling: first three seats are type-agnostic, staff first.
+// Backend115c actual seat-pricing.ts confirms2staff+1Sub is base only.
 for (const [staff, subs, monthly, annual] of [
   [1, 0, 249, 2390],
   [2, 0, 249, 2390],
@@ -40,22 +38,26 @@ for (const [staff, subs, monthly, annual] of [
   [4, 0, 288, 2764],
   [5, 0, 327, 3138],
   [12, 0, 600, 5756],
-  [2, 1, 258.99, 2485.90],
+  [2, 1, 249, 2390],
+  [1, 2, 249, 2390],
+  [1, 3, 258.99, 2485.90],
+  [2, 2, 258.99, 2485.90],
   [3, 2, 268.98, 2581.80],
   [4, 1, 297.99, 2859.90],
   [5, 10, 426.90, 4097],
   [100, 100, 5031, 48258],
 ]) {
-  test(`${staff} staff + ${subs} Subs uses independent allowances and exact cents`, () => {
+  test(`${staff} staff + ${subs} Subs shares the included allowance and retains exact cents`, () => {
     assert.equal(pricing.monthlyTotal(staff, subs), monthly);
     assert.equal(pricing.annualTotal(staff, subs), annual);
   });
 }
 
-test("every Sub is billed even when staff use fewer than three included seats", () => {
-  assert.equal(pricing.monthlyTotal(1, 2), 268.98);
+test("Sub seats use the included allowance remaining after staff", () => {
+  assert.equal(pricing.monthlyTotal(1, 2), 249);
+  assert.equal(pricing.monthlyTotal(2, 1), 249);
   assert.equal(pricing.monthlyTotal(3, 2), 268.98);
-  assert.equal(pricing.annualTotal(1, 2), 2581.80);
+  assert.equal(pricing.annualTotal(1, 2), 2390);
   assert.equal(pricing.annualTotal(3, 2), 2581.80);
 });
 
@@ -64,7 +66,7 @@ test("annual headline retains the established sum of displayed rounded parts", (
   assert.equal(pricing.annualHeadlineMonthly(5), 261);
   assert.equal(pricing.annualHeadlineMonthly(12), 478);
   assert.equal(pricing.annualSubAsMonthly(), 7.99);
-  assert.equal(pricing.annualHeadlineMonthly(2, 1), 206.99);
+  assert.equal(pricing.annualHeadlineMonthly(2, 1), 199);
   assert.equal(pricing.annualHeadlineMonthly(5, 10), 340.90);
   // The visible annual charge must not be reconstructed from that headline.
   assert.equal(pricing.annualTotal(5, 10), 4097);

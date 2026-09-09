@@ -14,6 +14,7 @@ import {
   SUB_SEAT_MONTHLY,
   SUB_SEAT_ANNUAL,
   BASE_ANNUAL,
+  billableSubSeats,
   monthlyTotal,
   annualTotal,
   annualAsMonthly,
@@ -24,7 +25,7 @@ import {
   type BillingPlan,
 } from "@/lib/pricing";
 
-/* F-075 ruling, 2026-09-07: quote staff and Sub seats separately.
+/* F-075 ruling, 2026-09-08: both classes share the first three included seats.
  * The annual headline sums the displayed rounded monthly equivalents;
  * the exact annual charge is always shown underneath. Signup does not
  * consume these counts; actual billing uses the backend roster.
@@ -54,6 +55,9 @@ export default function PlanConfigurator() {
   const [subSeats, setSubSeats] = useState(0);
 
   const extraSeats = Math.max(0, seats - INCLUDED_SEATS);
+  const includedStaff = Math.min(seats, INCLUDED_SEATS);
+  const extraSubSeats = billableSubSeats(seats, subSeats);
+  const includedSubs = subSeats - extraSubSeats;
   const annual = annualTotal(seats, subSeats);
 
   // Every price on this card is quoted per month. On the annual plan that
@@ -146,17 +150,17 @@ export default function PlanConfigurator() {
             )}
 
             <p className="text-forge-smoke text-sm mt-2">
-              includes 3 staff seats · +{formatUsd(seatMonthly)}/month per additional staff seat
+              includes 3 seats, staff or Sub · +{formatUsd(seatMonthly)}/month per additional staff seat
             </p>
             <p className="text-forge-smoke text-sm mt-1">
-              +{formatSeatUsd(subMonthly)}/month per Sub seat
+              +{formatSeatUsd(subMonthly)}/month per additional Sub seat
             </p>
 
             {plan === "monthly" ? (
               <p className="text-forge-smoke text-xs mt-2">
                 (Annual: {formatUsd(baseAnnualAsMonthly)}/month · +
                 {formatUsd(seatAnnualAsMonthly)}/month per additional staff seat · +
-                {formatSeatUsd(annualSubAsMonthly())}/month per Sub seat, approximately)
+                {formatSeatUsd(annualSubAsMonthly())}/month per additional Sub seat, approximately)
               </p>
             ) : (
               // Smoke, not graphite: this is the amount that actually gets
@@ -175,8 +179,8 @@ export default function PlanConfigurator() {
               </p>
               <p className="text-forge-smoke text-xs mt-0.5">
                 {extraSeats === 0
-                  ? "3 included"
-                  : `3 included + ${extraSeats} × ${formatUsd(seatMonthly)}/month`}
+                  ? `${includedStaff} included`
+                  : `${includedStaff} included + ${extraSeats} × ${formatUsd(seatMonthly)}/month`}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -206,7 +210,7 @@ export default function PlanConfigurator() {
                 {subSeats} Sub {subSeats === 1 ? "seat" : "seats"}
               </p>
               <p className="text-forge-smoke text-xs mt-0.5">
-                {formatSeatUsd(subMonthly)}/month each
+                {includedSubs} included{extraSubSeats > 0 ? ` + ${extraSubSeats} × ${formatSeatUsd(subMonthly)}/month` : ""}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -231,13 +235,11 @@ export default function PlanConfigurator() {
           </div>
 
           <p className="text-forge-smoke text-xs">
-            Subcontractors are separate:{" "}
-            {plan === "annual"
+            Your first {INCLUDED_SEATS} seats can be staff or Sub seats. Staff use
+            the included seats first, then Subs use any remaining. Additional Sub
+            seats are {plan === "annual"
               ? `${formatSeatUsd(SUB_SEAT_ANNUAL)}/year`
-              : `${formatSeatUsd(SUB_SEAT_MONTHLY)}/month`}{" "}
-            per sub seat, always an add-on. A sub seat never uses one of your{" "}
-            {INCLUDED_SEATS} included staff seats. Both counts are included in
-            your quote above.
+              : `${formatSeatUsd(SUB_SEAT_MONTHLY)}/month`} each.
           </p>
 
           {/* Feature list */}
