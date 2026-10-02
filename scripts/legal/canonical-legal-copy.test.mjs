@@ -43,7 +43,7 @@ import {
 } from "./canonical-legal-copy.mjs";
 
 const MATCHER_BODY_SHA256 = "82b69ee45c146cd11e33417e040912e6c3b8f62f15c2b94f4252ea208f8e3bc9";
-const FINGERPRINTS_SHA256 = "491d0b93a810b7198b550aaca18b0faf131a65801c54a534d41a347988108543";
+const FINGERPRINTS_SHA256 = "d251414f9ff345e5f800380b7ec69d9c9cbf70ce7ad15e0b1bfdec93f389087e";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const read = (rel) => readFileSync(new URL(rel, import.meta.url), "utf8");
