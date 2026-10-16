@@ -155,6 +155,8 @@ export const INTEGRATION_CARDS = [
 // Under the cards: who holds the switch, and the two pages that answer
 // "what does it see" and "how do I stop it".
 export const INTEGRATIONS_TRUST = {
+  // F-524 (T30): text only, no logo. Same words as the app's export line.
+  partner: "Forge also works with Buildertrend and JobTread. An owner or admin taps to send to JobTread, and Forge never deletes anything in JobTread.",
   line: "Owners and admins see every connection and can end any of them at any time.",
   links: [
     { label: "What is shared", slug: "what-is-shared" },
@@ -194,6 +196,13 @@ export const PRICING_FAQ: FaqItem[] = [
     question: "Is there a contract?",
     answer:
       "Monthly is month-to-month. Annual is billed once a year at a 20% discount and can be cancelled at renewal.",
+  },
+  {
+    // F-524 (T30): live with version 2. Text only, no logo. Sends are an owner
+    // or admin tap, and Forge never deletes in JobTread.
+    question: "Does Forge work with Buildertrend and JobTread?",
+    answer:
+      "Yes. Export a Buildertrend import file (CSV) to upload yourself, or send the estimate to JobTread. An owner or admin taps to send, and Forge never deletes anything in JobTread. You can also download a PDF or a CSV.",
   },
   {
     question: "What platforms does Forge run on?",
@@ -289,10 +298,11 @@ export const FEATURES = [
     label: "EXPORT",
     title: "Buildertrend-Ready in One Export",
     description:
-      "Review the AI output, make edits inline, apply your markup, then export a Buildertrend import file (CSV), a PDF, or a CSV. Your PM gets an email when you hand the job over.",
+      "Review the AI output, make edits inline, apply your markup, then export a Buildertrend import file (CSV), a PDF, or a CSV, or send the estimate to JobTread. An owner or admin taps to send, and Forge never deletes anything in JobTread. Your PM gets an email when you hand the job over.",
     bullets: [
       "Inline editing: add, edit, delete",
       "Buildertrend import file (CSV)",
+      "Send to JobTread (owner or admin)",
       "PDF download",
     ],
   },

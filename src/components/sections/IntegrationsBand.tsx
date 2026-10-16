@@ -88,6 +88,7 @@ export default function IntegrationsBand() {
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-5 text-center">
+          <p className="text-sm text-forge-smoke max-w-2xl">{INTEGRATIONS_TRUST.partner}</p>
           <p className="text-sm text-forge-smoke max-w-2xl">{INTEGRATIONS_TRUST.line}</p>
           {/* Links sit in their own wrapping row, each kept on one line
               (F-631: a control label never breaks over lines). */}

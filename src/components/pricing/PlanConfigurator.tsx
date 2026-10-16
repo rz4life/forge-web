@@ -35,7 +35,7 @@ const PLAN_FEATURES = [
   "Unlimited job walks and recordings",
   "AI-generated scope + estimate from every walk",
   "iOS, Web, and Android access",
-  "Export to Buildertrend, PDF, and CSV",
+  "Export to Buildertrend, JobTread, PDF, and CSV",
   "Team roles: Owner, Admin, PM, and Estimator",
   "Bring subs in with access scoped to their assigned tasks",
   "Email support",

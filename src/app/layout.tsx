@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   description: 'Forge turns a recorded walkthrough into a structured, trade-by-trade scope and a priced estimate in minutes. Built for general contractors. 14-day free trial.',
   // The last two join on the day integrations open (INTEGRATIONS_GA, F-515).
   keywords: [
-    'general contractor', 'AI estimating', 'construction estimates', 'job walk', 'scope of work', 'Buildertrend',
+    'general contractor', 'AI estimating', 'construction estimates', 'job walk', 'scope of work', 'Buildertrend', 'JobTread',
     ...(INTEGRATIONS_GA ? ['MCP server', 'construction API'] : []),
   ],
   openGraph: {

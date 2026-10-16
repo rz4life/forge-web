@@ -42,11 +42,11 @@ jobs:
       # the integration PRD: nothing about that connection until version 2 is
       # live) and every retired sentence that a customer's own connected tool
       # makes false. Reads the text src/ renders and public/; the built site is
-      # read after Build below. ALLOW_JOBTREAD is the switch the version 2
-      # change (T30) flips to "true" in its own commit, and nothing else does.
+      # read after Build below. ALLOW_JOBTREAD was flipped to "true" by F-524 (T30), the version 2 change,
+      # in the same commit as the JobTread copy.
       - name: No JobTread and no retired data claims in the source
         env:
-          ALLOW_JOBTREAD: "false"
+          ALLOW_JOBTREAD: "true"
         run: node scripts/check-claims.mjs
 
       - name: Actual pricing source regression tests
@@ -80,7 +80,7 @@ jobs:
       # prerendered page and client script of the production build (F-515).
       - name: No JobTread and no retired data claims in the built site
         env:
-          ALLOW_JOBTREAD: "false"
+          ALLOW_JOBTREAD: "true"
         run: node scripts/check-claims.mjs --built .next
 
       # F-515: the integrations band, the Developers footer group, the MCP
@@ -145,7 +145,7 @@ jobs:
         env:
           FORGE_INTERNAL_PAGES: "on"
           NEXT_PUBLIC_INTEGRATIONS_GA: "on"
-          ALLOW_JOBTREAD: "false"
+          ALLOW_JOBTREAD: "true"
         run: |
           npx playwright install --with-deps chromium
           npm run build

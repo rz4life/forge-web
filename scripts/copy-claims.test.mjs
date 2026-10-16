@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 
@@ -91,7 +91,7 @@ test("the band names no AI product beyond the approved 'not just Claude'", () =>
   // the approved draft line, as the example of a tool that is not required.
   const { INTEGRATION_CARDS, INTEGRATIONS_TRUST, INTEGRATIONS_BAND } = load();
   const words = JSON.stringify([INTEGRATION_CARDS, INTEGRATIONS_TRUST, { ...INTEGRATIONS_BAND, body: "" }]);
-  for (const name of ["Claude", "ChatGPT", "OpenAI", "Cursor", "Codex", "Gemini", "Copilot", "Anthropic", "JobTread"]) {
+  for (const name of ["Claude", "ChatGPT", "OpenAI", "Cursor", "Codex", "Gemini", "Copilot", "Anthropic"]) {
     assert.doesNotMatch(words, new RegExp(`\\b${name}\\b`, "i"), name);
   }
 });
@@ -104,4 +104,43 @@ test("the MCP card does not say the server cannot change anything (it has edit t
   assert.match(mcp.points.join(" "), /Reads and edits \(only with your permission\)/);
   // The public API really is GET only (forge-backend docs/public-openapi.json), so its card may say so.
   assert.match(api.points.join(" "), /Read only/);
+});
+
+// F-524 (T30): version 2 is live, so JobTread joins the Buildertrend lines.
+// Text only: no logo, no giveaway or beta wording, and no claim about what
+// leaves Forge that is false (sends are by an owner or admin tap; Forge never
+// deletes in JobTread). Same words as Forge_Web lib/jobtreadExportCopy.ts.
+const read = (rel) => readFileSync(new URL(`../${rel}`, import.meta.url), "utf8");
+
+test("F-524: JobTread sits beside Buildertrend in the Export feature, the FAQ and the band", () => {
+  const { FEATURES, PRICING_FAQ, INTEGRATIONS_TRUST } = load();
+  const exp = FEATURES.find((f) => f.label === "EXPORT");
+  assert.match(exp.description, /Buildertrend import file \(CSV\)/);
+  assert.match(JSON.stringify(exp), /JobTread/);
+  const faq = PRICING_FAQ.find((q) => /JobTread/.test(q.question));
+  assert.ok(faq, "the pricing FAQ answers the JobTread question");
+  assert.match(faq.answer, /Buildertrend/);
+  assert.match(faq.answer, /owner or admin/i);
+  assert.match(faq.answer, /never deletes anything in JobTread/);
+  assert.match(INTEGRATIONS_TRUST.partner, /JobTread/);
+  assert.match(INTEGRATIONS_TRUST.partner, /owner or admin/i);
+});
+
+test("F-524: keywords and the plan export line name JobTread; web words match", () => {
+  assert.match(read("src/app/layout.tsx"), /'Buildertrend', 'JobTread'/);
+  assert.match(read("src/components/pricing/PlanConfigurator.tsx"), /"Export to Buildertrend, JobTread, PDF, and CSV"/);
+});
+
+test("F-524: the JobTread copy has no giveaway or beta wording and no logo asset", () => {
+  const { FEATURES, PRICING_FAQ, INTEGRATIONS_TRUST } = load();
+  const words = JSON.stringify([FEATURES, PRICING_FAQ, INTEGRATIONS_TRUST]);
+  assert.doesNotMatch(words, /\b(beta|giveaway|free for|early access)\b/i);
+  assert.doesNotMatch(read("src/lib/constants.ts"), /jobtread[^"\n]*\.(svg|png|webp)/i);
+  assert.ok(!/jobtread/i.test(JSON.stringify(readdirSync(new URL("../public", import.meta.url)))), "no JobTread logo in public/");
+});
+
+test("F-524: the T21 guard is flipped in the workflow, in all three places", () => {
+  const ci = read(".github/workflows/ci.yml");
+  assert.doesNotMatch(ci, /ALLOW_JOBTREAD: "false"/);
+  assert.equal((ci.match(/ALLOW_JOBTREAD: "true"/g) ?? []).length, 3);
 });
